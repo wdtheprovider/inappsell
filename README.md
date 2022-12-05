@@ -17,7 +17,7 @@ allprojects {
 ```gradle 
 
 dependencies {
-	        implementation 'com.github.wdtheprovider:inappsell:Tag'
+	        implementation 'com.github.wdtheprovider:inappsell:1.0.1'
 	}
   
   ```
