@@ -1,4 +1,4 @@
-package com.wdtheprovider.inappsell;
+package com.wdtheprovider.inapppurchase;
 
 import android.content.Context;
 

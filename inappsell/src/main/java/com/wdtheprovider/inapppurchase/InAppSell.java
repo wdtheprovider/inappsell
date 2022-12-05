@@ -1,4 +1,4 @@
-package com.wdtheprovider.inappsell;
+package com.wdtheprovider.inapppurchase;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -25,6 +25,10 @@ public class InAppSell {
     boolean connected = false,verifyConsumed = false,verifySub = false,isSub = false;
     List<ProductDetails> productDetailsList = new ArrayList<>();
     List<ProductDetails> productDetailsSubList = new ArrayList<>();
+
+    public static void test(){
+
+    }
 
    public boolean connectToGooglePlay() {
         billingClient.startConnection(new BillingClientStateListener() {
