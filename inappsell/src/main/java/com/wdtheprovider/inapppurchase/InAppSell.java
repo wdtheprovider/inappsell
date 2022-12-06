@@ -19,36 +19,31 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InAppSell {
-    BillingClient billingClient;
-    boolean connected = false,verifyConsumed = false,verifySub = false,isSub = false;
-    List<ProductDetails> productDetailsList = new ArrayList<>();
-    List<ProductDetails> productDetailsSubList = new ArrayList<>();
 
-    public static void test(){
-
-    }
-
-   public boolean connectToGooglePlay() {
+   public static boolean connectToGooglePlay(BillingClient billingClient) {
+       final boolean[] connected = {false};
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingServiceDisconnected() {
-                connected = false;
-                connectToGooglePlay();
+                connected[0] = false;
+                connectToGooglePlay(billingClient);
             }
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    connected = true;
+                    connected[0] = true;
                 }
             }
         });
-        return connected;
+        return connected[0];
     }
 
     @SuppressLint("SetTextI18n")
-   public List<ProductDetails> getInAppProducts(ImmutableList<QueryProductDetailsParams.Product> productList) {
+   public static List<ProductDetails> getInAppProducts(BillingClient billingClient, ImmutableList<QueryProductDetailsParams.Product> productList) {
+        List<ProductDetails> productDetailsList = new ArrayList<>();
         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
                 .setProductList(productList)
                 .build();
@@ -61,7 +56,8 @@ public class InAppSell {
     }
 
     @SuppressLint("SetTextI18n")
-   public List<ProductDetails> getSubProducts(ImmutableList<QueryProductDetailsParams.Product> productList) {
+   public static List<ProductDetails> getSubProducts(BillingClient billingClient, ImmutableList<QueryProductDetailsParams.Product> productList) {
+        List<ProductDetails> productDetailsSubList = new ArrayList<>();
         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
                 .setProductList(productList)
                 .build();
@@ -73,7 +69,7 @@ public class InAppSell {
         return productDetailsSubList;
     }
 
-    public void launchPurchaseFlow(ProductDetails productDetails, Activity activity) {
+    public static void launchPurchaseFlow(BillingClient billingClient, ProductDetails productDetails, Activity activity) {
         ImmutableList<BillingFlowParams.ProductDetailsParams> productDetailsParamsList =
                 ImmutableList.of(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -86,39 +82,42 @@ public class InAppSell {
         billingClient.launchBillingFlow(activity, billingFlowParams);
     }
 
-    public boolean verifyConsumablePurchase(Purchase purchase) {
+    public static boolean verifyConsumablePurchase(BillingClient billingClient, Purchase purchase) {
+        AtomicBoolean verifyConsumed = new AtomicBoolean(false);
         ConsumeParams consumeParams = ConsumeParams.newBuilder()
                 .setPurchaseToken(purchase.getPurchaseToken())
                 .build();
         ConsumeResponseListener listener = (billingResult, s) -> {
-            verifyConsumed = billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK;
+            verifyConsumed.set(billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK);
         };
         billingClient.consumeAsync(consumeParams, listener);
-        return  verifyConsumed;
+        return verifyConsumed.get();
     }
 
-    public boolean verifySubPurchase(Purchase purchases) {
+    public boolean verifySubPurchase(BillingClient billingClient, Purchase purchases) {
+       AtomicBoolean verifySub = new AtomicBoolean(false);
         AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams
                 .newBuilder()
                 .setPurchaseToken(purchases.getPurchaseToken())
                 .build();
         billingClient.acknowledgePurchase(acknowledgePurchaseParams, billingResult -> {
-            verifySub = billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK;
+            verifySub.set(billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK);
         });
-      return  verifySub;
+      return verifySub.get();
     }
 
-    public boolean checkSubscription(Context context){
+    public boolean checkSubscription(BillingClient billingClient, Context context){
+        AtomicBoolean isSub = new AtomicBoolean(false);
         billingClient = BillingClient.newBuilder(context).enablePendingPurchases().setListener((billingResult, list) -> {}).build();
         final BillingClient finalBillingClient = billingClient;
-        if(connectToGooglePlay()){
+        if(connectToGooglePlay(billingClient)){
             finalBillingClient.queryPurchasesAsync(
                     QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build(), (billingResult1, list) -> {
                         if (billingResult1.getResponseCode() == BillingClient.BillingResponseCode.OK){
-                            isSub = list.size() > 0;
+                            isSub.set(list.size() > 0);
                         }
                     });
         }
-        return  isSub;
+        return isSub.get();
     }
 }
