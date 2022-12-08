@@ -2,13 +2,27 @@
 In App Purchase Custom Library
 
 ```gradle 
+Settings.gradle file
 
-allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" } // add this
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" } // add this
+    }
+}
+rootProject.name = "inapppurchase"
+include ':app'
+
   
   ```
   
@@ -17,8 +31,8 @@ allprojects {
 ```gradle 
 
 dependencies {
-	        implementation 'com.github.wdtheprovider:inappsell:1.0.1'
-	}
+	implementation 'com.github.wdtheprovider:inappsell:1.0.2'
+    }
   
   ```
   
